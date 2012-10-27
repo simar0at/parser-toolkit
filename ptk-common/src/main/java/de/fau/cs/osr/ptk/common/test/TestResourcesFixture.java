@@ -339,8 +339,10 @@ public class TestResourcesFixture
 	 */
 	public static String lineEndToUnix(String result)
 	{
-		result = result.replace("\r\n", "\n");
-		result = result.replace("\r", "\n");
+		result = result.replaceAll("\\r\\n", "\n");
+		result = result.replaceAll("\\r", "\n");
+		result = result.replaceAll("\\\\r\\\\n", "\\\\n");
+		result = result.replaceAll("\\\\r", "\\\\n");
 		return result;
 	}
 }

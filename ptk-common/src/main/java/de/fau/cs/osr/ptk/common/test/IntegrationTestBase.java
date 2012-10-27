@@ -156,9 +156,10 @@ public abstract class IntegrationTestBase<T extends AstNode<T>>
 		
 		String result = writer.toString();
 		
-		// We always operate with UNIX line end '\n':
-		result = TestResourcesFixture.lineEndToUnix(result);
+		//normalize to unix paths. That also solves problems the next step has if a path starts with \r or \n.
+		result = resources.stripBaseDirectoryAndFixPath(result);
 		
-		return resources.stripBaseDirectoryAndFixPath(result);
+		// We always operate with UNIX line end '\n':
+		return TestResourcesFixture.lineEndToUnix(result);
 	}
 }
