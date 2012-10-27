@@ -127,7 +127,7 @@
         <configuration>
           <header>etc/license-header.txt</header>
           <strictCheck>true</strictCheck>
-          <failIfMissing>true</failIfMissing>
+          <failIfMissing>false</failIfMissing>
           <skip>false</skip>
           <excludes>
             <exclude>**/.gitignore</exclude>
