@@ -17,6 +17,19 @@
 
 package de.fau.cs.osr.ptk.common.xml;
 
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.AST_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_ARRAY_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_LOCATION_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_NAME_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_NULL_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.tagNameToClassName;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -154,7 +167,7 @@ public class XmlReader<T extends AstNode<T>>
 			throw new DeserializationException(event, "Expected document start");
 		
 		skipWhitespace();
-		expectStartElement(XmlConstants.AST_QNAME);
+		expectStartElement(AST_QNAME);
 		
 		T root = readNodeListOrTextOrNode();
 		
@@ -185,15 +198,15 @@ public class XmlReader<T extends AstNode<T>>
 				T node;
 				
 				StartElement elem = event.asStartElement();
-				if (elem.getName().equals(XmlConstants.LIST_QNAME))
+				if (elem.getName().equals(LIST_QNAME))
 				{
 					node = readNodeList(elem);
 				}
-				else if (elem.getName().equals(XmlConstants.TEXT_QNAME))
+				else if (elem.getName().equals(TEXT_QNAME))
 				{
 					node = readText(elem);
 				}
-				else if (elem.getName().equals(XmlConstants.NULL_QNAME))
+				else if (elem.getName().equals(NULL_QNAME))
 				{
 					node = null;
 				}
@@ -204,7 +217,7 @@ public class XmlReader<T extends AstNode<T>>
 				
 				if (node != null)
 				{
-					Attribute l = elem.getAttributeByName(XmlConstants.ATTR_LOCATION_QNAME);
+					Attribute l = elem.getAttributeByName(ATTR_LOCATION_QNAME);
 					if (l != null)
 						node.setNativeLocation(AstLocation.valueOf(l.getValue()));
 				}
@@ -245,7 +258,7 @@ public class XmlReader<T extends AstNode<T>>
 	{
 		String name = elem.getName().getLocalPart();
 		
-		String className = XmlConstants.tagNameToClassName(name);
+		String className = tagNameToClassName(name);
 		
 		Exception e;
 		try
@@ -285,7 +298,7 @@ public class XmlReader<T extends AstNode<T>>
 				return;
 			
 			StartElement elem = event.asStartElement();
-			if (!elem.getName().equals(XmlConstants.ATTR_QNAME))
+			if (!elem.getName().equals(ATTR_QNAME))
 				return;
 			
 			readNodeAttribute(reader.nextEvent().asStartElement(), n);
@@ -307,15 +320,15 @@ public class XmlReader<T extends AstNode<T>>
 			Attribute attribute = iterator.next();
 			
 			QName name = attribute.getName();
-			if (name.equals(XmlConstants.ATTR_NAME_QNAME))
+			if (name.equals(ATTR_NAME_QNAME))
 			{
 				attrName = attribute.getValue();
 			}
-			else if (name.equals(XmlConstants.ATTR_ARRAY_QNAME))
+			else if (name.equals(ATTR_ARRAY_QNAME))
 			{
 				isArray = Integer.valueOf(attribute.getValue());
 			}
-			else if (name.equals(XmlConstants.ATTR_NULL_QNAME))
+			else if (name.equals(ATTR_NULL_QNAME))
 			{
 				isNull = Boolean.valueOf(attribute.getValue());
 			}
@@ -328,7 +341,7 @@ public class XmlReader<T extends AstNode<T>>
 		{
 			StartElement valueElem = expectStartElement(null, false);
 			
-			String className = XmlConstants.tagNameToClassName(
+			String className = tagNameToClassName(
 					valueElem.getName().getLocalPart());
 			
 			Exception e;
@@ -376,9 +389,9 @@ public class XmlReader<T extends AstNode<T>>
 		{
 			String name = i.getName();
 			
-			StartElement elem = expectStartElement(new QName(name), false);
+			StartElement elem = expectStartElement(new QName(PTK_NS, name, PTK_NS), false);
 			
-			Attribute isNullAttr = elem.getAttributeByName(XmlConstants.ATTR_NULL_QNAME);
+			Attribute isNullAttr = elem.getAttributeByName(ATTR_NULL_QNAME);
 			if (isNullAttr != null && Boolean.valueOf(isNullAttr.getValue()))
 			{
 				expectStartElement(null);
@@ -442,7 +455,7 @@ public class XmlReader<T extends AstNode<T>>
 		{
 			for (int i = 0; i < n.getChildNames().length; ++i)
 			{
-				expectStartElement(new QName(n.getChildNames()[i]));
+				expectStartElement(new QName(PTK_NS, n.getChildNames()[i], PTK));
 				
 				T child = readNodeListOrTextOrNode();
 				

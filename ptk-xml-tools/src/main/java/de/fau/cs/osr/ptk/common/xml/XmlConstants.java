@@ -22,6 +22,7 @@ import javax.xml.namespace.QName;
 public class XmlConstants
 {
 	public static final String PTK_NS = "http://sweble.org/doc/site/tooling/parser-toolkit/ptk-xml-tools";
+	public static final String PTK = "ptk";
 	
 	// =========================================================================
 	
