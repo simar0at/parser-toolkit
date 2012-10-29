@@ -26,6 +26,7 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.typeNameToTagName;
 
@@ -225,8 +226,9 @@ public class XmlWriter<T extends AstNode<T>>
 				(SAXTransformerFactory) SAXTransformerFactory.newInstance();
 		
 		if (!compact)
-			// Not sure if this always works
-			tf.setAttribute("indent-number", new Integer(2));
+			// This is different for every TransformerFactory
+			if (tf.getClass().getName().contains("org.apache.xalan"))
+				tf.setAttribute("indent-number", new Integer(2));
 		
 		th = tf.newTransformerHandler();
 		
@@ -236,9 +238,21 @@ public class XmlWriter<T extends AstNode<T>>
 		
 		if (!compact)
 		{
-			// Not sure if this always works
 			t.setOutputProperty(OutputKeys.INDENT, "yes");
-			t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+			// This is different for every transformer.
+			// The following works for (com.sun.)org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl
+			if (t.getClass().getName().contains("org.apache.xalan"))
+			{
+				t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+			}
+			
+			if (t.getClass().getName().contains("net.sf.saxon")) {
+				try {
+				  t.setOutputProperty("{http://saxon.sf.net/}indent-spaces", "2");
+				} catch (RuntimeException e) {
+					// this is "output customization" which is unavailable in saxon HE
+				}
+			}	
 		}
 		
 		Result streamResult = new StreamResult(writer);
@@ -246,7 +260,7 @@ public class XmlWriter<T extends AstNode<T>>
 		
 		th.startDocument();
 		
-		addAttribute(new QName("xmlns:ptk"), PTK_NS);
+		th.startPrefixMapping(PTK, PTK_NS);
 		startElement(AST_QNAME);
 		atts.clear();
 	}
@@ -483,27 +497,27 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private void startElement(String localName) throws SAXException
 	{
-		th.startElement("", "", localName, atts);
+		th.startElement(PTK_NS, localName, PTK + ":" + localName, atts);
 	}
 	
 	private void startElement(QName name) throws SAXException
 	{
-		th.startElement("", "", qNameToStr(name), atts);
+		th.startElement(name.getNamespaceURI(), name.getLocalPart(), qNameToStr(name), atts);
 	}
 	
 	private void addAttribute(QName name, String value)
 	{
-		atts.addAttribute("", "", qNameToStr(name), "CDATA", value);
+		atts.addAttribute(name.getNamespaceURI(), name.getLocalPart(), qNameToStr(name), "CDATA", value);
 	}
 	
 	private void endElement(String localName) throws SAXException
 	{
-		th.endElement("", "", localName);
+		th.endElement(PTK_NS, localName, PTK + ":" + localName);
 	}
 	
 	private void endElement(QName name) throws SAXException
 	{
-		th.endElement("", "", qNameToStr(name));
+		th.endElement(name.getNamespaceURI(), name.getLocalPart(), qNameToStr(name));
 	}
 	
 	private String qNameToStr(QName name)
@@ -511,6 +525,6 @@ public class XmlWriter<T extends AstNode<T>>
 		if (name.getNamespaceURI() == null || name.getNamespaceURI().isEmpty())
 			return name.getLocalPart();
 		
-		return "ptk:" + name.getLocalPart();
+		return PTK + ":" + name.getLocalPart();
 	}
 }
