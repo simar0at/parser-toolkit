@@ -434,7 +434,7 @@ public class JsonConverterImpl<T extends AstNode<T>>
 	
 	private String abbrev(Class<?> clazz)
 	{
-		return this.abbrev.abbrev(clazz);
+		return this.abbrev.abbrev(clazz)[0];
 	}
 	
 	private Class<?> resolve(String typeSuffix) throws ClassNotFoundException
