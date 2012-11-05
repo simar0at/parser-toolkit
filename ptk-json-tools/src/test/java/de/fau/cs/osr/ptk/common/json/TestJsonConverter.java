@@ -141,7 +141,6 @@ public class TestJsonConverter
 	}
 	
 	@Test
-	@Ignore
 	public void testSerializationAndDeserialization() throws Exception
 	{
 		Section in = astSection()
