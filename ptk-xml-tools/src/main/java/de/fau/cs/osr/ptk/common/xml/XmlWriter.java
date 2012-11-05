@@ -26,13 +26,14 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
-import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.typeNameToTagName;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Writer;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
 import javax.xml.bind.JAXBException;
@@ -50,6 +51,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import de.fau.cs.osr.ptk.common.Warning;
 import de.fau.cs.osr.ptk.common.ast.AstNode;
 import de.fau.cs.osr.ptk.common.ast.AstNodePropertyIterator;
 import de.fau.cs.osr.ptk.common.ast.AstNodeListImpl;
@@ -260,7 +262,10 @@ public class XmlWriter<T extends AstNode<T>>
 		
 		th.startDocument();
 		
-		th.startPrefixMapping(PTK, PTK_NS);
+		for (Iterator<Entry<String,String> > iter = abbrevService.getUsedPrefixes().entrySet().iterator(); iter.hasNext();) {
+			Entry<String,String> e = iter.next();
+			th.startPrefixMapping(e.getKey(), e.getValue());
+		}
 		startElement(AST_QNAME);
 		atts.clear();
 	}
@@ -302,20 +307,20 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private void visit(T n) throws SAXException, JAXBException, IOException
 	{
-		String typeName = abbrevService.abbrev(n.getClass());
+		String[] typeName = abbrevService.abbrev(n.getClass());
 		
-		String tagName = typeNameToTagName(typeName);
+		String tagName = typeNameToTagName(typeName[0]);
 		
 		if (n.getNativeLocation() != null)
 			addAttribute(ATTR_LOCATION_QNAME, n.getNativeLocation().toString());
-		startElement(tagName);
+		startElement(tagName, typeName[1]);
 		atts.clear();
 		{
 			for (Entry<String, Object> e : n.getAttributes().entrySet())
 				writeAttribute(e.getKey(), e.getValue());
 			
 			for (AstNodePropertyIterator i = n.propertyIterator(); i.next();)
-				writeProperty(i.getName(), i.getValue());
+				writeProperty(i.getName(), i.getValue(), typeName[1]);
 			
 			if (n.isList())
 			{
@@ -325,15 +330,15 @@ public class XmlWriter<T extends AstNode<T>>
 			{
 				for (int i = 0; i < n.getChildNames().length; ++i)
 				{
-					startElement(n.getChildNames()[i]);
+					startElement(n.getChildNames()[i], typeName[1]);
 					{
 						dispatch(n.get(i));
 					}
-					endElement(n.getChildNames()[i]);
+					endElement(n.getChildNames()[i], typeName[1]);
 				}
 			}
 		}
-		endElement(tagName);
+		endElement(tagName, typeName[1]);
 	}
 	
 	private void visit(AstText<T> n) throws SAXException
@@ -365,18 +370,18 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	// =========================================================================
 	
-	private void writeProperty(String name, Object value) throws SAXException, JAXBException, IOException
+	private void writeProperty(String name, Object value, String nsPrefix) throws SAXException, JAXBException, IOException
 	{
 		if (value == null)
 		{
 			addAttribute(ATTR_NULL_QNAME, "true");
-			startElement(name);
+			startElement(name, nsPrefix);
 			atts.clear();
-			endElement(name);
+			endElement(name, nsPrefix);
 		}
 		else
 		{
-			marshal(name, value);
+			marshal(name, value, nsPrefix);
 		}
 	}
 	
@@ -412,9 +417,9 @@ public class XmlWriter<T extends AstNode<T>>
 		{
 			if (value != null)
 			{
-				String typeName = abbrevService.abbrev(type);
+				String[] typeName = abbrevService.abbrev(type);
 				
-				marshal(typeNameToTagName(typeName), value);
+				marshal(typeNameToTagName(typeName[0]), value, typeName[1]);
 			}
 		}
 		endElement(ATTR_QNAME);
@@ -422,16 +427,17 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	// =========================================================================
 	
-	private void marshal(String name, Object obj) throws SAXException, JAXBException, IOException
+	@SuppressWarnings("rawtypes")
+	private void marshal(String name, Object obj, String nsPrefix) throws SAXException, JAXBException, IOException
 	{
 		Class<?> clazz = obj.getClass();
 		if (ReflectionUtils.isExtPrimitive(clazz) || clazz == String.class)
 		{
 			String value = String.valueOf(obj);
 			
-			startElement(name);
+			startElement(name, nsPrefix);
 			th.characters(value.toCharArray(), 0, value.length());
-			endElement(name);
+			endElement(name, nsPrefix);
 		}
 		else if (obj instanceof Enum)
 		{
@@ -443,17 +449,30 @@ public class XmlWriter<T extends AstNode<T>>
 			
 			String value = ((Enum<?>) obj).name();
 			
-			startElement(name);
+			startElement(name, nsPrefix);
 			th.characters(value.toCharArray(), 0, value.length());
-			endElement(name);
+			endElement(name, nsPrefix);
+		}
+		else if (obj instanceof List && ((List) obj).size() > 0 && ((List) obj).get(0) instanceof Warning) 
+		{
+			startElement(name, nsPrefix);
+			for (@SuppressWarnings("unchecked")
+			Iterator<Warning> iter = ((List)obj).iterator(); iter.hasNext(); )
+			{
+				startElement("warning", nsPrefix);
+				String value = iter.next().toString();
+				th.characters(value.toCharArray(), 0, value.length());
+				endElement("warning", nsPrefix);
+			}
+			endElement(name, nsPrefix);
 		}
 		else if (nodeClass.isAssignableFrom(clazz))
 		{
-			startElement(name);
+			startElement(name, nsPrefix);
 			@SuppressWarnings("unchecked")
 			T node = (T) obj;
 			visit(node);
-			endElement(name);
+			endElement(name, nsPrefix);
 		}
 		else
 		{
@@ -487,17 +506,17 @@ public class XmlWriter<T extends AstNode<T>>
 			String value = b64.encodeToString(baos.toByteArray());
 			baos.reset();
 			
-			startElement(name);
+			startElement(name, nsPrefix);
 			th.characters(value.toCharArray(), 0, value.length());
-			endElement(name);
+			endElement(name, nsPrefix);
 		}
 	}
 	
 	// =========================================================================
 	
-	private void startElement(String localName) throws SAXException
+	private void startElement(String localName, String nsPrefix) throws SAXException
 	{
-		th.startElement(PTK_NS, localName, PTK + ":" + localName, atts);
+		th.startElement(abbrevService.getUsedPrefixes().get(nsPrefix), localName, nsPrefix + ":" + localName, atts);
 	}
 	
 	private void startElement(QName name) throws SAXException
@@ -510,9 +529,9 @@ public class XmlWriter<T extends AstNode<T>>
 		atts.addAttribute(name.getNamespaceURI(), name.getLocalPart(), qNameToStr(name), "CDATA", value);
 	}
 	
-	private void endElement(String localName) throws SAXException
+	private void endElement(String localName, String nsPrefix) throws SAXException
 	{
-		th.endElement(PTK_NS, localName, PTK + ":" + localName);
+		th.endElement(abbrevService.getUsedPrefixes().get(nsPrefix), localName, nsPrefix + ":" + localName);
 	}
 	
 	private void endElement(QName name) throws SAXException
@@ -525,6 +544,6 @@ public class XmlWriter<T extends AstNode<T>>
 		if (name.getNamespaceURI() == null || name.getNamespaceURI().isEmpty())
 			return name.getLocalPart();
 		
-		return PTK + ":" + name.getLocalPart();
+		return name.getPrefix() + ":" + name.getLocalPart();
 	}
 }

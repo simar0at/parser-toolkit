@@ -25,8 +25,6 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
-import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
-import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.tagNameToClassName;
 
@@ -389,7 +387,9 @@ public class XmlReader<T extends AstNode<T>>
 		{
 			String name = i.getName();
 			
-			StartElement elem = expectStartElement(new QName(PTK_NS, name, PTK_NS), false);
+			String[] nameWithPrefix = abbrevService.abbrev(i.getClass());
+			
+			StartElement elem = expectStartElement(new QName(abbrevService.getUsedPrefixes().get(nameWithPrefix[1]), name, nameWithPrefix[1]), false);
 			
 			Attribute isNullAttr = elem.getAttributeByName(ATTR_NULL_QNAME);
 			if (isNullAttr != null && Boolean.valueOf(isNullAttr.getValue()))
@@ -453,9 +453,11 @@ public class XmlReader<T extends AstNode<T>>
 		}
 		else
 		{
+			String[] nameWithPrefix = abbrevService.abbrev(n.getClass());
+			
 			for (int i = 0; i < n.getChildNames().length; ++i)
 			{
-				expectStartElement(new QName(PTK_NS, n.getChildNames()[i], PTK));
+				expectStartElement(new QName(abbrevService.getUsedPrefixes().get(nameWithPrefix[1]), n.getChildNames()[i], nameWithPrefix[1]));
 				
 				T child = readNodeListOrTextOrNode();
 				

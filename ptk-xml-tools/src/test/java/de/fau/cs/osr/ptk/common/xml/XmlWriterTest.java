@@ -83,8 +83,8 @@ public class XmlWriterTest
 		// -------
 		
 		NameAbbrevService as = new NameAbbrevService(
-				"de.fau.cs.osr.ptk.common.test",
-				"de.fau.cs.osr.ptk.common.xml");
+				new String[]{"de.fau.cs.osr.ptk.common.test", "swc", "http://example.org/test-dummy-for-swc"},
+				new String[]{"de.fau.cs.osr.ptk.common.xml", "ptk"});
 		
 		String xml = serialize(in, as);
 		
