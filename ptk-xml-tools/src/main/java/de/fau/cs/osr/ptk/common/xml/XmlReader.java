@@ -553,7 +553,14 @@ public class XmlReader<T extends AstNode<T>>
 		String head = ("" + name.charAt(0)).toUpperCase();
 		String tail = name.substring(1);
 		String getterName = "get" + head + tail;
-		return clazz.getMethod(getterName).getReturnType();
+		Class<?> retValue = null;
+		try {
+			retValue = clazz.getMethod(getterName).getReturnType();
+		} catch (NoSuchMethodException nse) { // Maybe this is a boolean which sometimes uses a getter method starting with "is".
+			getterName = "is" + head + tail;
+			retValue = clazz.getMethod(getterName).getReturnType();
+		}
+		return retValue;
 	}
 	
 	private T checkNodeType(Object o)
