@@ -88,8 +88,8 @@ public class FileCompare
 	
 	public String fixActualText(String actual)
 	{
-		return resources.stripBaseDirectoryAndFixPath(
-				lineEndToUnix(actual));
+		return lineEndToUnix(resources.stripBaseDirectoryAndFixPath(
+				actual));
 	}
 	
 	private void checkReferenceFile(
