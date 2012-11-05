@@ -475,7 +475,14 @@ public class JsonConverterImpl<T extends AstNode<T>>
 		Method getterMethod;
 		try
 		{
-			getterMethod = nodeClass.getMethod(getterName);
+			try 
+			{
+				getterMethod = nodeClass.getMethod(getterName);
+			} 
+			catch (NoSuchMethodException nse) {
+				getterName = "is" + head + tail;
+				getterMethod = nodeClass.getMethod(getterName);
+			}
 		}
 		catch (NoSuchMethodException e)
 		{
@@ -492,6 +499,7 @@ public class JsonConverterImpl<T extends AstNode<T>>
 		}
 		
 		Class<?> propType = getterMethod.getReturnType();
+
 		
 		Method setterMethod;
 		try
@@ -503,6 +511,24 @@ public class JsonConverterImpl<T extends AstNode<T>>
 			throw new JsonParseException("Cannot set property `"
 					+ propertyName + "' in AST node of type `"
 					+ nodeClass.getName() + "'. ", e);
+		}
+
+		try
+		{
+			if (propType.isInterface() && !propType.getPackage().getName().equals("java.util"))
+			try {
+				propType = Class.forName(propType.getName() + "$" + propType.getSimpleName() + "Impl");
+			}
+			catch (ClassNotFoundException nfe)
+			{
+				propType = Class.forName(propType.getName() + "Impl");
+			}
+		}
+		catch (Exception e)
+		{
+			throw new JsonParseException("Cannot set property `"
+					+ propertyName + "' in AST node of type `"
+					+ nodeClass.getName() + "' which is an interface without known implementation. ", e);
 		}
 		
 		setter = new PropSetter(propType, setterMethod);
