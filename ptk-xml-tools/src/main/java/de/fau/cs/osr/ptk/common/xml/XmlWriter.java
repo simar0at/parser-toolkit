@@ -417,9 +417,23 @@ public class XmlWriter<T extends AstNode<T>>
 		{
 			if (value != null)
 			{
-				String[] typeName = abbrevService.abbrev(type);
-				
-				marshal(typeNameToTagName(typeName[0]), value, typeName[1]);
+				if (value instanceof List && ((List) value).size() > 0 && ((List) value).get(0) instanceof Warning)
+				{
+					startElement(name, AST_QNAME.getPrefix());
+					for (@SuppressWarnings("unchecked")
+					Iterator<Warning> iter = ((List)value).iterator(); iter.hasNext(); )
+					{
+						startElement("warning", AST_QNAME.getPrefix());
+						String message = iter.next().toString();
+						th.characters(message.toCharArray(), 0, message.length());
+						endElement("warning", AST_QNAME.getPrefix());
+					}
+					endElement(name, AST_QNAME.getPrefix());
+				} else {
+					String[] typeName = abbrevService.abbrev(type);
+
+					marshal(typeNameToTagName(typeName[0]), value, typeName[1]);
+				}
 			}
 		}
 		endElement(ATTR_QNAME);
