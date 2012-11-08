@@ -22,6 +22,7 @@ import com.google.gson.GsonBuilder;
 
 import de.fau.cs.osr.ptk.common.ast.AstNode;
 import de.fau.cs.osr.utils.NameAbbrevService;
+import de.fau.cs.osr.ptk.common.ast.RtData;
 
 public class JsonConverter
 {
@@ -138,7 +139,10 @@ public class JsonConverter
 		builder.registerTypeHierarchyAdapter(
 				nodeClass,
 				new AstNodeGsonTypeAdapter<T>(config));
-		
+		// RtData
+		builder.registerTypeHierarchyAdapter(
+				RtData.class,
+				new RtDataGsonTypeDeserializer(config));
 		// We require the serialization of null values
 		builder.serializeNulls();
 		
