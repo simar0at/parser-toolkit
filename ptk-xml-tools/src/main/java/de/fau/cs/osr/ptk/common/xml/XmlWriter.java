@@ -25,7 +25,6 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
-import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.typeNameToTagName;
 
@@ -86,7 +85,7 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private boolean compact = false;
 	
-	private Writer writer;
+	private Result result;
 	
 	private NameAbbrevService abbrevService;
 	
@@ -176,12 +175,17 @@ public class XmlWriter<T extends AstNode<T>>
 		serialize(node, writer, new NameAbbrevService());
 	}
 	
+	public void serialize(T node, Writer writer, NameAbbrevService abbrevService) throws SerializationException
+	{
+		serialize(node, new StreamResult(writer), abbrevService);
+	}
+	
 	public void serialize(
 			T node,
-			Writer writer,
+			Result result,
 			NameAbbrevService abbrevService) throws SerializationException
 	{
-		this.writer = writer;
+		this.result = result;
 		
 		this.abbrevService = abbrevService;
 		
@@ -257,8 +261,7 @@ public class XmlWriter<T extends AstNode<T>>
 			}	
 		}
 		
-		Result streamResult = new StreamResult(writer);
-		th.setResult(streamResult);
+		th.setResult(result);
 		
 		th.startDocument();
 		
@@ -280,7 +283,7 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private void dispatch(T n) throws SAXException, JAXBException, IOException
 	{
-		if (listClass.isInstance(n) && n.getClass() == AstNodeListImpl.class)
+		if (listClass.isInstance(n))
 		{
 			visit((AstNodeListImpl<T>) n);
 		}
@@ -356,16 +359,26 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private void visit(AstNodeListImpl<T> n) throws SAXException, JAXBException, IOException
 	{
+		QName q = LIST_QNAME;
 		if (n.getNativeLocation() != null)
 			addAttribute(ATTR_LOCATION_QNAME, n.getNativeLocation().toString());
-		startElement(LIST_QNAME);
+		if (n.getClass() == AstNodeListImpl.class)
+			startElement(q);
+		else
+		{
+			String[] typeName = abbrevService.abbrev(n.getClass());
+			String tagName = typeNameToTagName(typeName[0]);
+			q = new QName(abbrevService.getUsedPrefixes().get(typeName[1]), tagName, typeName[1]);
+			startElement(q);
+		}
+			
 		atts.clear();
 		{
 			@SuppressWarnings("unchecked")
 			T node = (T) n;
 			iterate(node);
 		}
-		endElement(LIST_QNAME);
+		endElement(q);
 	}
 	
 	// =========================================================================
@@ -385,6 +398,7 @@ public class XmlWriter<T extends AstNode<T>>
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void writeAttribute(String name, Object value) throws SAXException, JAXBException, IOException
 	{
 		Class<?> type = null;
