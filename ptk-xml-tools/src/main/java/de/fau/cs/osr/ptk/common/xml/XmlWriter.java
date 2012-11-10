@@ -26,6 +26,7 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.typeNameToTagName;
 
 import java.io.IOException;
@@ -360,20 +361,34 @@ public class XmlWriter<T extends AstNode<T>>
 	private void visit(AstNodeListImpl<T> n) throws SAXException, JAXBException, IOException
 	{
 		QName q = LIST_QNAME;
+		String[] typeName = null;
 		if (n.getNativeLocation() != null)
 			addAttribute(ATTR_LOCATION_QNAME, n.getNativeLocation().toString());
-		if (n.getClass() == AstNodeListImpl.class)
-			startElement(q);
-		else
+		if (n.getClass() != AstNodeListImpl.class)
 		{
-			String[] typeName = abbrevService.abbrev(n.getClass());
+			typeName = abbrevService.abbrev(n.getClass());			
 			String tagName = typeNameToTagName(typeName[0]);
 			q = new QName(abbrevService.getUsedPrefixes().get(typeName[1]), tagName, typeName[1]);
-			startElement(q);
 		}
-			
+		startElement(q);
 		atts.clear();
 		{
+			if (n.getClass() != AstNodeListImpl.class)
+			{
+				for (Entry<String, Object> e : n.getAttributes().entrySet())
+					writeAttribute(e.getKey(), e.getValue());
+
+				for (AstNodePropertyIterator i = n.propertyIterator(); i.next();)
+				{
+					Object value = i.getValue();
+//					if (value == null)
+//						writeProperty(i.getName(), value, PTK);
+//					else
+//						writeProperty(i.getName(), value, abbrevService.abbrev(value.getClass())[1]);
+					writeProperty(i.getName(), value, typeName[1]);
+				}
+			}
+
 			@SuppressWarnings("unchecked")
 			T node = (T) n;
 			iterate(node);
