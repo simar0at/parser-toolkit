@@ -387,7 +387,7 @@ public class XmlReader<T extends AstNode<T>>
 		{
 			String name = i.getName();
 			
-			String[] nameWithPrefix = abbrevService.abbrev(i.getClass());
+			String[] nameWithPrefix = abbrevService.abbrev(n.getClass());
 			
 			StartElement elem = expectStartElement(new QName(abbrevService.getUsedPrefixes().get(nameWithPrefix[1]), name, nameWithPrefix[1]), false);
 			
