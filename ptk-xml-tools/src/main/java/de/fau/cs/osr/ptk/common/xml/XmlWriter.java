@@ -27,6 +27,7 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.typeNameToTagName;
 
 import java.io.IOException;
@@ -173,7 +174,7 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	public void serialize(T node, Writer writer) throws SerializationException
 	{
-		serialize(node, writer, new NameAbbrevService());
+		serialize(node, writer, new NameAbbrevService(PTK, PTK_NS));
 	}
 	
 	public void serialize(T node, Writer writer, NameAbbrevService abbrevService) throws SerializationException

@@ -83,7 +83,7 @@ public class JsonConverterImpl<T extends AstNode<T>>
 			throw new IllegalArgumentException("An instance of textClass must be assignable to type " + AstText.class.getName());
 		
 		if (abbrev == null)
-			abbrev = new NameAbbrevService(false);
+			abbrev = new NameAbbrevService("json", "http://json.org", false);
 		this.abbrev = abbrev;
 		
 		propTypeCache = new LinkedHashMap<PropKey, PropSetter>()

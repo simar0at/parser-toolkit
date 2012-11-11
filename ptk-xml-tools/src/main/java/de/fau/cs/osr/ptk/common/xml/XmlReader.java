@@ -26,6 +26,8 @@ import static de.fau.cs.osr.ptk.common.xml.XmlConstants.ATTR_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.LIST_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.NULL_QNAME;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.TEXT_QNAME;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK;
+import static de.fau.cs.osr.ptk.common.xml.XmlConstants.PTK_NS;
 import static de.fau.cs.osr.ptk.common.xml.XmlConstants.tagNameToClassName;
 
 import java.io.ByteArrayInputStream;
@@ -124,7 +126,7 @@ public class XmlReader<T extends AstNode<T>>
 	
 	public T deserialize(Reader reader) throws DeserializationException
 	{
-		return deserialize(reader, new NameAbbrevService());
+		return deserialize(reader, new NameAbbrevService(PTK, PTK_NS));
 	}
 	
 	public T deserialize(

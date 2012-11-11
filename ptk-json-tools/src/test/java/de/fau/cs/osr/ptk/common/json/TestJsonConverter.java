@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.gson.Gson;
@@ -49,7 +48,7 @@ public class TestJsonConverter
 	{
 		this.jconv = JsonConverter.createGsonConverter(
 				true,
-				new NameAbbrevService(
+				new NameAbbrevService("ptk", "http://example.org/test-dummy-for-ptk",
 						new String[]{"de.fau.cs.osr.ptk.common.test", "ptk"},
 						new String[]{"de.fau.cs.osr.ptk.common.json", "ptk"}),
 				false,
