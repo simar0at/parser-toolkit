@@ -84,7 +84,7 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private boolean compact = false;
 	
-	private Writer writer;
+	private Result result;
 	
 	private NameAbbrevService abbrevService;
 	
@@ -174,12 +174,17 @@ public class XmlWriter<T extends AstNode<T>>
 		serialize(node, writer, new NameAbbrevService());
 	}
 	
+	public void serialize(T node, Writer writer, NameAbbrevService abbrevService) throws SerializationException
+	{
+		serialize(node, new StreamResult(writer), abbrevService);
+	}
+	
 	public void serialize(
 			T node,
-			Writer writer,
+			Result result,
 			NameAbbrevService abbrevService) throws SerializationException
 	{
-		this.writer = writer;
+		this.result = result;
 		
 		this.abbrevService = abbrevService;
 		
@@ -255,8 +260,7 @@ public class XmlWriter<T extends AstNode<T>>
 			}	
 		}
 		
-		Result streamResult = new StreamResult(writer);
-		th.setResult(streamResult);
+		th.setResult(result);
 		
 		th.startDocument();
 		
