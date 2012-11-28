@@ -285,7 +285,7 @@ public class XmlWriter<T extends AstNode<T>>
 	
 	private void dispatch(T n) throws SAXException, JAXBException, IOException
 	{
-		if (listClass.isInstance(n))
+		if (listClass.isInstance(n) && n.getClass() == AstNodeListImpl.class)
 		{
 			visit((AstNodeListImpl<T>) n);
 		}
