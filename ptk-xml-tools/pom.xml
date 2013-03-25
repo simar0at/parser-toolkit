@@ -41,6 +41,13 @@
       <artifactId>ptk-common</artifactId>
     </dependency>
 
+    <!-- Utils -->
+    <dependency>
+      <groupId>de.fau.cs.osr.utils</groupId>
+      <version>2.0.0-simar-SNAPSHOT</version>
+      <artifactId>utils</artifactId>
+    </dependency>
+
     <!--
       Testing
     -->
